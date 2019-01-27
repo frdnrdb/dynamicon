@@ -2,14 +2,14 @@ const HtmlWebPackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+//const CleanWebpackPlugin = require('clean-webpack-plugin');
 const fileExtensions = ['jpg', 'jpeg', 'png', 'gif', 'eot', 'otf', 'svg', 'ttf', 'woff', 'woff2'];
 
 module.exports = (env, argv) => ({
   cache: false,
   entry: {
     dynamicon: ['babel-regenerator-runtime', __dirname + '/index.js'],
-    demo: ['babel-regenerator-runtime', __dirname + '/src/style.css', __dirname + '/src/index.js']
+    demo: ['babel-regenerator-runtime', __dirname + '/demo/style.css', __dirname + '/demo/index.js']
   },
   output: {
     publicPath: ''
@@ -65,11 +65,13 @@ module.exports = (env, argv) => ({
     ]
   },
   plugins: [
+    /*
     new CleanWebpackPlugin([
       argv.mode === 'production' ? __dirname + '/dist' : '/temp'
     ]),
+    */
     new HtmlWebPackPlugin({
-      template: "./src/index.html",
+      template: "./demo/index.html",
       filename: "./index.html"
     }),
     new MiniCssExtractPlugin()

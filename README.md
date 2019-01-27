@@ -2,6 +2,8 @@
 
 dynamic emoticon
 
+did some textual sentiment analysis and needed a face rather than a float (number)
+
 `npm i -S dynamicon`
 
 ```
@@ -18,7 +20,8 @@ document.body.appendChild(d)
 
 // set mood
 
-d.set(value)
+d.ease(value) // transition/ animate
+d.set(value) // immediate
 
 // change appearance
 
@@ -27,18 +30,22 @@ d.setTheme('outline')
 
 // custom initialization
 
-const d = require('dynamicon'){
+const d = require('dynamicon')({
     value: 0,
-    size: 200,
     min: -100,
     max: 100,
+    size: 200,
     theme: {
-        face: 'rgb(255, 235, 151)',
+        face: '#ffeb97',
         faceStroke: 'none',
         stroke: '#444',
         mouthFill: '#ff396d40',
         heart: '#ff396d'
     }
-}
+})
 
 ```
+
+maybe
+* support old browsers (typeof window.customElements === undefined)
+* drop webpack and babel (read: modern javascript) to reduce filesize

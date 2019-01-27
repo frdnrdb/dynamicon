@@ -8,11 +8,11 @@ const config = {
                 heart: '#444'
         },
         default: {
-                face: 'rgb(255, 235, 151)',
+                face: '#ffeb97',
                 faceStroke: 'none',
                 stroke: '#444',
-                mouthFill: '#ff396d40',
-                heart: '#ff396d'
+                mouthFill: '#ff643948',
+                heart: '#ff6439'
         }
     }
 };
@@ -43,10 +43,12 @@ function defineElement() {
 
         update() {
             this.updateEyes();
-            this.updateMouth(); 
+            this.updateMouth();
         }
 
         updateEyes() {
+            clearTimeout(this.winkTimeout);
+
             const value = this.value;
             const { eyes, misery, bliss } = this;
             const p = this.size * 0.1;
@@ -59,17 +61,37 @@ function defineElement() {
             else if (value > this.blissLimit) {
                 this.extreme.off(misery);
                 this.extreme.on(bliss);
-            }    
-            else if (this.extreme.state) {
-                this.extreme.off(misery);
-                this.extreme.off(bliss);   
-            }        
+            }
             else {
+                if (this.extreme.state) {
+                    this.extreme.off(misery);
+                    this.extreme.off(bliss);   
+                }  
+
                 const eyesY = this.size/2.5 - change/3;
-                eyes.map(eye => {
-                    eye.setAttribute('cy', eyesY - (value < 0 ? change/4 : 0));
-                    eye.setAttribute('r', this.eyeSize + (value < 0 ? change/3.5 : change/7.5));
+                eyes._children.map(eye => {
+                    attrNS(eye, {
+                        cy: eyesY - (value < 0 ? change/4 : 0),
+                        r: this.eyeSize + (value < 0 ? change/3.5 : change/7.5)
+                    });
                 });            
+
+                clearTimeout(this.winkTimeout);
+                const wink = this.value > this.winkLimit && this.eyes._children[1];
+
+                if (wink) {
+                    this.winkTimeout = setTimeout(()=>{
+                        wink.style.transition = this.winkTransition;
+                        wink.style.transform = 'scale3d(1.1, .05, 1)';
+                        setTimeout(()=>{
+                            wink.style.transform = 'scale3d(1, 1, 1)';
+                            setTimeout(()=>{
+                                wink.style.transition = 'none';
+                            }, 350);                            
+                        }, 350);
+                    }, 350);
+                }   
+
             }
         }   
         
@@ -108,7 +130,8 @@ function defineElement() {
             // fill path if positive
             this.mouth.style.fill = value > 0 ? this.colors.mouthFill : 'transparent';
 
-            this.mouth.setAttribute(
+            this.mouth.setAttributeNS(
+                null,
                 'd',
                 `m${l - scale/2},${o} c${hl} ${y-o}, ${hr + scale} ${y-o}, ${r + scale},0 ${close}`
             );
@@ -119,9 +142,9 @@ function defineElement() {
                 this.container = create('div', this.shadowRoot);
                 this.container.className = 'emoticon';
                 this.svg = createNS('svg', this.container);
-                this.circle = createNS('circle', this.svg);
-                this.eyesGroup = createNS('g', this.svg);
-                this.eyes = Array(2).fill().map(() => createNS('circle', this.eyesGroup));
+                this.face = createNS('circle', this.svg);
+                this.eyes = createNS('g', this.svg);
+                this.eyes._children = Array(2).fill().map(() => createNS('circle', this.eyes));
                 this.misery = createNS('g', this.svg);
                 this.misery._children = Array(4).fill().map(() => createNS('line', this.misery));
                 this.bliss = createNS('g', this.svg);
@@ -132,28 +155,42 @@ function defineElement() {
             this.colors = this.getTheme();
         
             const strokeWidth = this.size/30;
-            const transition = 'all .35s cubic-bezier(0,0,0,1)';
             const extremeTransition = 'all .35s cubic-bezier(0.175, 0.885, 0.32, 1.5)';
+            this.winkTransition = 'transform .35s cubic-bezier(.5, 0, 0, 1)';
+
+            this.miseryLimit = ( this.min < 0 ? -1 : 1 ) * ( Math.abs(this.min) - Math.abs(this.min)*.01 );     
+            this.blissLimit = ( this.max > 0 ? 1 : -1 ) * ( Math.abs(this.max) - Math.abs(this.max)*.01 );     
+            this.winkLimit = ( this.max > 0 ? 1 : -1 ) * ( Math.abs(this.max) - Math.abs(this.max)*.25 );     
             
-            this.svg.setAttribute('width', this.size);
-            this.svg.setAttribute('height', this.size);
+            attrNS(this.svg, {
+                width: this.size,
+                height: this.size,
+                version: '1.1'
+            });
             
-            this.circle.setAttribute('cx', this.size/2);
-            this.circle.setAttribute('cy', this.size/2);
-            this.circle.setAttribute('r', this.size/2 - strokeWidth);
-            this.circle.style.strokeWidth = strokeWidth;
-            this.circle.style.stroke = this.colors.faceStroke;
-            this.circle.style.fill = this.colors.face;
-            
+            attrNS(this.face, {
+                cx: this.size/2,
+                cy: this.size/2,
+                r: this.size/2 - strokeWidth,
+                stroke: this.colors.faceStroke,
+                fill: this.colors.face,
+                'stroke-width': strokeWidth
+            });
+
             const eyeX = this.size/3.5;
             const eyeY = this.size/4;
             this.eyeSize = this.size/15;
-            this.eyes.map((circle, i) => {
-                circle.setAttribute('cx', i ? this.size - eyeX : eyeX);
-                circle.setAttribute('cy', eyeY);
-                circle.setAttribute('r', this.eyeSize);
-                circle.style.fill = this.colors.stroke;
-                circle.style.transition = transition;
+            this.eyes._children.map((circle, i) => {
+                attrNS(circle, {
+                    cx: i ? this.size - eyeX : eyeX,
+                    cy: eyeY,
+                    r: this.eyeSize,
+                    fill: this.colors.stroke,
+                    'stroke-width': strokeWidth
+                });                
+                Object.assign(circle.style, {
+                    transformOrigin: '70% 37.5%'
+                });   
             });
         
             this.misery.style.opacity = 0;
@@ -163,72 +200,102 @@ function defineElement() {
                 const y = eyeY + l/2 + this.eyeSize;
                 const flip = i % 2 === 0 ? l : 0;
                 const back = i % 2 !== 0 ? l : 0;
-                line.setAttribute('x1', x);
-                line.setAttribute('y1', y + back);
-                line.setAttribute('x2', x + l);
-                line.setAttribute('y2', y + flip);
-                line.style.fill = 'none';
-                line.style.stroke = this.colors.stroke;
-                line.style.strokeWidth = strokeWidth;
-                line.style.strokeLinecap = 'round';
-                line.style.transformOrigin = `${i > 1 ? 70 : 30}% 45%`;
-                line.style.transform = 'scale(.5)';
-                line.style.transition = extremeTransition;
+                attrNS(line, {
+                    x1: x,
+                    y1: y + back,
+                    x2: x + l,
+                    y2: y + flip,
+                    fill: 'none',
+                    stroke: this.colors.stroke,
+                    'stroke-linecap': 'round',
+                    'stroke-width': strokeWidth
+                });
+                Object.assign(line.style, {
+                    transformOrigin: `${i > 1 ? 70 : 30}% 45%`,
+                    transform: 'scale(.5)',
+                    transition: extremeTransition                
+                });                  
             });    
 
             this.bliss.style.opacity = 0;
             this.bliss._children.map((heart, i) => {
                 const xx = i ? this.size - eyeX : eyeX;
                 const yy = eyeY;
-                heart.setAttribute('d', this.heart(xx,yy,this.size));
-                heart.style.fill = this.colors.heart;
-                heart.style.stroke = 'none';
-                heart.style.strokeWidth = strokeWidth;
-                heart.style.strokeLinecap = 'round';
-                heart.style.strokeLinejoin = 'round';
-                heart.style.transformOrigin = `${i ? 70 : 35}% 35%`;
-                heart.style.transform = 'scale(.5)';
-                heart.style.transition = extremeTransition;
+                attrNS(heart, {
+                    d: this.heart(xx, yy, this.size),
+                    name: 'bliss',
+                    fill: this.colors.stroke,
+                    stroke: 'none',
+                    'stroke-linecap': 'round',
+                    'stroke-linejoin': 'round',
+                    'stroke-width': strokeWidth
+                });                
+                Object.assign(heart.style, {
+                    transformOrigin: `${i ? 70 : 35}% 35%`,
+                    transform: 'scale(.5)',
+                    transition: extremeTransition
+                });                
             });        
 
             this.extreme = {
                 on: n => {
                     n._children.map(x => {
+                        if (x.getAttribute('name') === 'bliss') {
+                            x.style.fill = this.colors.heart;
+                        }                        
                         x.style.transform = 'scale(1)';
                     });
-                    this.eyesGroup.style.opacity = 0;
+                    this.eyes.style.opacity = 0;
                     n.style.opacity = 1;
                     this.extreme.state = true;            
                 },
                 off: n => {
                     n.style.opacity = 0;
-                    this.eyesGroup.style.opacity = 1;
+                    this.eyes.style.opacity = 1;
                     n._children.map(x => {
+                        if (x.getAttribute('name') === 'bliss') {
+                            x.style.fill = this.colors.stroke;
+                        }                        
                         x.style.transform = 'scale(.5)';
                     });          
                     this.extreme.state = false;            
                 }
             };    
 
-            this.miseryLimit = ( this.min < 0 ? -1 : 1 ) * ( Math.abs(this.min) - Math.abs(this.min)*.01 );     
-            this.blissLimit = ( this.max > 0 ? 1 : -1 ) * ( Math.abs(this.max) - Math.abs(this.max)*.01 );     
+            attrNS(this.mouth, {
+                fill: this.colors.mouthFill,
+                stroke: this.colors.stroke,
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+                'stroke-width': strokeWidth
+            });              
 
-            this.mouth.style.fill = this.colors.mouthFill;
-            this.mouth.style.stroke = this.colors.stroke;
-            this.mouth.style.strokeWidth = strokeWidth;
-            this.mouth.style.strokeLinecap = 'round';
-            this.mouth.style.strokeLinejoin = 'round';  
-            this.mouth.style.transition = transition;
-        }    
+        }
 
         get() {
             return this.value;
         }   
 
         set(value) {
-            this.value = value;
-            this.update();
-        }        
+            if (this.easeInterval) {
+                clearInterval(this.easeInterval);
+            }            
+            this.setValue(value);
+        }   
+        
+        ease(value) {
+            const self = this;
+            this.animate(this.value, value, 1000, val => {
+                self.setValue(val);
+            });         
+        }
+
+        setValue(value) {
+            requestAnimationFrame( () => {
+                this.value = value;
+                this.update();            
+            });
+        }
 
         setSize(value) {
             this.size = value;
@@ -252,6 +319,35 @@ function defineElement() {
             return `M${x1},${y1}c0,${h-h/6}-${w},${w+h/6}-${w},${w+h/6}s-${w}-${h/2}-${w}-${w+h/6}c0-${h},${w}-${h},${w}-0C${x1-w},${y1-h},${x1},${y1-h},${x1},${y1}z`;
         }        
 
+        animate(from, to, duration = 500, cb) {
+            clearInterval(this.easeInterval);
+            from = parseFloat(from, 10);
+            to = parseFloat(to, 10);
+            const range = to - from;
+            const start = new Date().getTime();
+            const easingFunction = this.easeInOutQuart;
+            if (from === to || to > this.max || from < this.min) {
+                return;
+            }
+            this.easeInterval = setInterval(() => {
+                const time = new Date().getTime() - start;
+                cb(easingFunction(
+                    time,
+                    from, 
+                    range,
+                    duration
+                ));
+                if (time >= duration) {
+                    clearInterval(this.easeInterval);
+                }
+            }, 1000 / 60);
+        }
+
+        easeInOutQuart(t, b, c, d) {
+            if ((t /= d / 2) < 1) return c / 2 * t * t * t * t + b;
+            return -c / 2 * ((t -= 2) * t * t * t - 2) + b;
+        }        
+
         render () {
             this.buildEmoticon();
             this.update();
@@ -269,12 +365,17 @@ function createNS(type, parent) {
     return parent.appendChild(document.createElementNS('http://www.w3.org/2000/svg', type));
 }    
 
+function attrNS(node, o) {
+    Object.entries(o).map( ([ key, val ]) => node.setAttributeNS( null, key, val) );
+}
+
 try {
+    if (!window.customElements.get('dynamic-emoticon')) {
+        window.customElements.define('dynamic-emoticon', defineElement());
+    }
+
     const init = options => {
         Object.assign(config, options || {});
-        if (!window.customElements.get('dynamic-emoticon')) {
-            window.customElements.define('dynamic-emoticon', defineElement());
-        }
         return document.createElement('dynamic-emoticon');
     };
 

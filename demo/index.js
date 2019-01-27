@@ -7,28 +7,29 @@ const initialSize = window.innerHeight/3;
     });
     document.body.appendChild(dynamicon);
 
-    moodInput(dynamicon)
+    const score = scoreElement(dynamicon);
+    const moodRange = moodInput(dynamicon, score);
     scaleInput(dynamicon);
-    themeInput(dynamicon);   
+    themeInput(dynamicon);
+
+    randomFace(dynamicon, score, moodRange);
 
     info();   
 
 })();
 
-function moodInput(dynamicon) {
-    const score = scoreElement(dynamicon);
+function moodInput(dynamicon, score) {
     const moodRange = create('input');
+    moodRange.className = 'mood';
     moodRange.type = 'range';
-    moodRange.style.margin = '2em 0';
-    moodRange.style.width = '200px';
     moodRange.setAttribute('min', -100);
     moodRange.setAttribute('max', 100);
     moodRange.value = 0;
     moodRange.oninput = e => {
         dynamicon.set(e.target.value);
-        score.innerHTML = e.target.value;      
-    };
-    moodRange.insertAdjacentHTML('afterend', '<label>mood</label>')
+        score.innerHTML = e.target.value;   
+    };  
+    moodRange.insertAdjacentHTML('afterend', '<label>mood<span>click icon for transition</span></label>');
     return moodRange;
 }
 
@@ -39,14 +40,13 @@ function scaleInput(dynamicon) {
     scaleContainer.style.position = 'fixed';
     scaleContainer.style.top = 'auto';
     scaleContainer.style.bottom = '2.5vh';
-    scaleRange.style.width = '200px';
     scaleRange.setAttribute('min', 25);
-    scaleRange.setAttribute('max', .65 * window.innerHeight);
+    scaleRange.setAttribute('max', Math.min(.65 * window.innerHeight, window.innerWidth));
     scaleRange.value = initialSize;
     scaleRange.oninput = e => {
         dynamicon.setSize(e.target.value);        
     };
-    scaleContainer.insertAdjacentHTML('beforeend', '<label style="margin-top:1.25em;">scale</label>')
+    scaleContainer.insertAdjacentHTML('beforeend', '<label>scale</label>')
     return scaleRange;
 }
 
@@ -55,6 +55,7 @@ function themeInput(dynamicon) {
     themeContainer.style.position = 'fixed';
     themeContainer.style.top = '2.5vh';
     themeContainer.style.right = '2.5vh';
+    themeContainer.style.minHeight = '3em';
     themeContainer.style.display = 'flex';
     themeContainer.style.alignItems = 'center';
 
@@ -81,14 +82,25 @@ function scoreElement(dynamicon) {
     return score;    
 }
 
+function randomFace(dynamicon, score, moodRange) {
+    dynamicon.addEventListener('click', () => {
+        let rand = Math.floor(Math.random()*220) - 110;
+        rand = Math.max(-100, rand);
+        rand = Math.min(100, rand);
+        dynamicon.ease(rand);
+        score.innerHTML = rand;
+        moodRange.value = rand;
+    });
+}
+
 function info() {
-    const infoContainer = create('div');
+    const infoContainer = create('aside');
     infoContainer.style.position = 'fixed';
     infoContainer.style.top = '2.5vh';
     infoContainer.style.left = '2.5vh';
     infoContainer.style.display = 'flex';
     infoContainer.style.alignItems = 'center';
-    infoContainer.innerHTML = '<pre>npm i -S dynamicon</pre><a href="https://fvn.no">github</a>';
+    infoContainer.innerHTML = '<pre>npm i -S dynamicon</pre><a href="https://github.com/frdnrdb/dynamicon">github</a>';
 }
 
 function create(type, parent) {

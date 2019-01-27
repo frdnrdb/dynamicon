@@ -1,11 +1,15 @@
 {
   "name": "dynamicon",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "dynamic emoticon",
   "main": "index.js",
   "scripts": {
     "start": "NODE_ENV=development webpack-dev-server --mode development --open --hot",
     "build": "webpack --mode production"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:frdnrdb/dynamicon.git"
   },
   "keywords": [
     "emoticon",
@@ -19,7 +23,7 @@
   ],
   "author": "Frode Nordbø",
   "license": "MIT",
-  "homepage": "",
+  "homepage": "http://dynamicon.surge.sh",
   "devDependencies": {
     "@babel/core": "7.1.0",
     "@babel/preset-env": "7.1.0",

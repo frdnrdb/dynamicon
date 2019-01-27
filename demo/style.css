@@ -1,6 +1,6 @@
 :root {
     --dark-color: #444;
-    --range-color: #ccc;
+    --range-color: #c8c8c8;
     --range-handle: 30px;
     --range-slider: 2px;
 }
@@ -24,6 +24,7 @@ body {
     justify-content: center;
     min-width: 100vw;
     min-height: 100vh;
+    user-select: none;    
 }
 
 .score {
@@ -37,11 +38,12 @@ body {
 
 input {
     position: relative;
-    width: 550px;
-    height: 5px;
     top: var(--range-slider);
-    height: 0;
     -webkit-appearance: none;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    user-select: none;    
 }
 
 input::-webkit-slider-thumb {
@@ -108,7 +110,10 @@ input::-ms-track {
     border-color: transparent;
     color: transparent;
 }
-
+input[type="range"] {
+    min-height: var(--range-handle);
+    width: 200px;
+}
 input[type="checkbox"] {
     border: var(--range-slider) solid var(--range-color);
     height: var(--range-handle);
@@ -120,10 +125,19 @@ input[type="checkbox"]:checked {
 }
 
 label {
-    display:block;
-    text-align:center;
-    padding:.25em;
+    display: block;
+    text-align: center;
     margin: 0;
+    padding: 1.5em .5em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    line-height: 1;
+    font-size: 80%;
+}
+label span {
+    opacity: .5;
+    display: block;
+    margin-top: 1em;
 }
 
 a, a:visited, a:active {
@@ -134,4 +148,12 @@ pre {
     margin: 0;
     padding: .5em 1em;
     background: #f0f0f0;    
+}
+aside {
+    min-height: 3em;
+}
+@media only screen and (max-width: 600px) {
+    body {
+        font-size: 12px;
+    }
 }
